@@ -1,0 +1,76 @@
+Step-1: To build the Jenkins Image
+-------
+* Create a file name Dockerfile in a directory add below texts.
+
+---
+# Use the official Jenkins LTS image
+FROM jenkins/jenkins:lts
+
+# Switch to root user
+USER root
+
+# Install Docker and other necessary packages
+RUN apt-get update && apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg2 \
+    lsb-release \
+    software-properties-common \
+    sudo
+
+# Install Docker CLI
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
+    && echo "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+    > /etc/apt/sources.list.d/docker.list \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli
+
+# Add Jenkins user to the Docker group
+
+RUN usermod -aG $(getent group 999 | cut -d: -f1) jenkins
+
+# Switch back to Jenkins user
+USER jenkins
+
+# Expose Jenkins default port
+EXPOSE 8080
+
+# Use bash shell instead of sh
+ENTRYPOINT ["/bin/bash", "-c", "/usr/local/bin/jenkins.sh"]
+
+---
+
+* Now run the "docker build -t cicd-skill-jenkins . "
+
+Step-2: Run the Image you have Build named 'cicd-skill-jenkins'
+-------
+* Create a persistence volume directory
+	# mkdir /var/cicd-volume
+
+
+# sudo docker run -d -p 8080:8080 -v /var/cicd-volume:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock --name cicd-skill-jenkins --user root cicd-skill-jenkins
+
+
+
+* Check if it is runnig or not:
+	# docker ps
+
+Step-3:
+-------
+* Expose and Configure the Jenkins. Use your browser tab, and hit 'http://<your machine's IP:8080>'
+* After getting the password configuration option execute into the runnig container and get the defult password.
+	# docker exec -it <container id or cotainer name> bash
+*Get the defult password by:
+	# cat /the/location/showed/in/jenkins/GUI
+* Now update the password.
+* Add suggested plugins
+* After loginto the Jenkins also add Dsicord and Git plugins.
+
+Step-4:
+-------
+* Add an access token of your repository. Make sure you only allow 'read_repository' scopes. Now configure this access token in jenkins credentials which will then used in Jenkins Image Build.
+*Also add a credentials for your public doker repository if it required authentication.
+
+
+	
